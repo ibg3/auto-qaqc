@@ -19,5 +19,5 @@ USER node-red
 #RUN mkdir -p ~/.node-red/node_modules && ln -s /usr/src/node-red/node_modules/pynodered ~/.node-red/node_modules/
 WORKDIR /data
 
-ENTRYPOINT ["/startscript.sh"]
+ENTRYPOINT ["sh", "/startscript.sh"]
 
