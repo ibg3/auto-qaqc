@@ -2,18 +2,14 @@
 
 1. Clone this project to your PC. 
    
-   ```git clone git@ibg3repo.ibg.kfa-juelich.de:t.korf/clisos-pynodered.git```
+   ```git clone https://github.com/ibg3/auto-qaqc.git```
 2. Install Docker (https://www.docker.com/get-started)
-3. Login to Gitlab Server:
+3. To start the container execute:
 
-   ```docker login ibg3repo.ibg.kfa-juelich.de:5000```
-4. To start the container execute:
+   ```docker run --rm -it --name pynodered -v path/to/project:/data -p 127.0.0.1:1880:1880 ibg3/auto-qaqc:latest```
 
-   ```docker run --rm -it --name pynodered -v path/to/project:/data -p 127.0.0.1:1880:1880 ibg3repo.ibg.kfa-juelich.de:5000/t.korf/clisos-pynodered:latest```
-
-5. Open `localhost:1880` in your browser
+4. Open `localhost:1880` in your browser
    
-
 
 For Debugging use the following command:
 
