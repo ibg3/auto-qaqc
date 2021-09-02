@@ -6,7 +6,7 @@
 2. Install Docker (https://www.docker.com/get-started)
 3. To start the container execute:
 
-   ```docker run --rm -it --name pynodered -v path/to/project:/data -p 127.0.0.1:1880:1880 ibg3/auto-qaqc:latest```
+   ```docker run --rm -it --name auto-qaqc -v path/to/project:/data -p 127.0.0.1:1880:1880 ibg3/auto-qaqc:latest```
 
 4. Open `localhost:1880` in your browser
    
