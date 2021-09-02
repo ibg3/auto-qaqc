@@ -1,0 +1,15 @@
+--- core.py	2020-05-03 17:34:41.651582956 +0200
++++ /home/t.korf/PycharmProjects/janni_nodered/venv/lib/python3.8/site-packages/pynodered/core.py	2021-02-03 14:14:52.817343312 +0100
+@@ -101,6 +101,12 @@
+                     form += "<option  value=\"{0}\" {1}>{0}</option>\n".format(val, "selected=\"selected\"" if val == property.value else "")
+                 form += """    </select>
+                     </div> """
++            elif property.input_type == "textarea":
++                form += """
++                   <div class="form-row">
++                   <label for="node-input-%(name)s"><i class="icon-tag"></i> %(title)s</label>
++                   <textarea id="node-input-%(name)s" style="width: 100%%;" rows="20" placeholder="%(title)s">
++                   </div>""" % property.as_dict()
+             else:
+                 raise Exception("Unknown input type")
+ 
