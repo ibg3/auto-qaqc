@@ -52,7 +52,7 @@ if test -f "${FILE}"; then
     pip3 install -r ${FILE}
 fi
 
-FILE=/data/pnr.py
+FILE=/data/start.py
 if ! test -f "${FILE}"; then
     tee -a ${FILE} > /dev/null <<EOF
 
@@ -71,7 +71,7 @@ fi
 export PYTHONPATH=/usr/local/lib/python3.8/dist-packages/:/data/:$PYTHONPATH
 echo $PYTHONPATH
 echo "############ Starting pynodered"
-pynodered /data/pnr.py &
+pynodered /data/start.py &
 PID_PY=$!
 sleep 5
 echo "############ pynodered started"
@@ -109,7 +109,7 @@ while sleep 5; do
   ps aux |grep pynodered |grep -q -v grep
   PROCESS_1_STATUS=$?
   if [ $PROCESS_1_STATUS -ne 0 ]; then
-    pynodered /data/pnr.py &
+    pynodered /data/start.py &
     PID_PY=$!
 
   fi
