@@ -31,11 +31,10 @@ if test -d "${FILE}"; then
 fi
 
 
-FILE=/data/.node-red
+FILE=/data/node-red
 if [ ! -d "${FILE}" ]
 then
-#    mkdir ${FILE}
-    mkdir -p /data/.node-red/node_modules/pynodered
+    mkdir -p ${FILE}/node_modules/pynodered
     print "created ${FILE}"
 fi
 
@@ -85,13 +84,10 @@ echo "############ pynodered started"
 
 
 # Start the second process
-#npm --no-update-notifier --no-fund start --cache /data/.npm -- --userDir /data -D
-#node-red --cache /data --userDir /data --settings /data/.node-red/settings.js 
-#node-red --userDir /data/.node-red  --settings /data/.node-red/settings.js /data/.node-red/flows.json
-node-red --userDir /data/.node-red /data/.node-red/flows.json &
+node-red --userDir /data/node-red /data/node-red/flows.json &
 PID_NR=$!
 
-ps aux |grep node-red |grep -q -v grep
+ps aux | grep node-red | grep -q -v grep
 
 status=$?
 if [ $status -ne 0 ]; then
@@ -118,7 +114,6 @@ while sleep 5; do
   PROCESS_2_STATUS=$?
   # If the greps above find anything, they exit with 0 status
   # If they are not both 0, then something is wrong
-#  if [ $PROCESS_1_STATUS -ne 0 -o $PROCESS_2_STATUS -ne 0 ]; then
    if [ $PROCESS_2_STATUS -ne 0 ]; then
 
     echo "NodeRed exited."
