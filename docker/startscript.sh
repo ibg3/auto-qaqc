@@ -6,17 +6,17 @@ PID_NR=0
 # SIGTERM-handler
 term_handler() {
   if [ $PID_PY -ne 0 ]; then
-    kill -SIGTERM "$PID_PY"
+    kill -TERM "$PID_PY"
     wait "$PID_PY"
   fi
   if [ $PID_NR -ne 0 ]; then
-    kill -SIGTERM "$PID_NR"
+    kill -TERM "$PID_NR"
     wait "$PID_NR"
   fi
   exit 143; # 128 + 15 -- SIGTERM
 }
 
-trap 'kill ${!}; term_handler' SIGTERM
+trap 'kill ${!}; term_handler' TERM
 
 FILE=/data
 if ! test -d "${FILE}"; then
