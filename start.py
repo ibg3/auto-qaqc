@@ -1,7 +1,7 @@
 import json
 
 import matplotlib.pyplot as plt
-from org.fzj.ibg3.algo.loaddataandresample import execute
+from org.fzj.ibg3.algo.cosmicray_station_processing import execute
 from pynodered.server import app
 
 from clisos_mod.clisos import CliSos
@@ -13,7 +13,7 @@ app.config['MAX_CONTENT_LENGTH'] = 5000 * 1024 * 1024
 app.config['DEBUG'] = True
 
 
-@node_red(title="Clisos", category="TSM Input", description="This Node takes a Clisos-Configuration and outputs three "
+@node_red(title="Clisos", category="TSMInput", description="This Node takes a Clisos-Configuration and outputs three "
                                                             "values 1. orig_data: Data coming from SOS 2. payload: "
                                                             "parsed data 3. header: header of data",
           properties=dict(
@@ -24,6 +24,7 @@ def tsm_clisos(node, msg):
     # config_string = "".join(map(chr, list(map(int, msg["payload"]["data"]))))
     config_string = node.config.value
     print(config_string)
+    msg["clisos_config_string"] = config_string
     resultModel = "om:Observation"
     srs = None
     spatialFilterSrs = None
@@ -73,6 +74,10 @@ def tsm_clisos(node, msg):
     msg['orig_data'] = s
     msg['payload'] = out
     msg['header'] = header
+
+    f = open("demofile2.txt", "a")
+    f.write(out)
+    f.close()
 
     return msg
 
@@ -253,7 +258,7 @@ def runoff(node, msg):
     return msg
 
 
-@node_red(title="Inject Text", category="TSM Input",
+@node_red(title="Inject Text", category="TSMInput",
           properties=dict(
               topic=NodeProperty("Topic", type="text", required=True),
               text=NodeProperty("Text", type="text", required=True, input_type="textarea")
@@ -267,7 +272,7 @@ def inject_text(node, msg):
 
 
 @node_red(category="TSMFilter")
-def lsar(node, msg):
+def cosmicray_station_processing(node, msg):
     data_grouped_by_date = json_to_datemap(msg["payload"])
 
     msg['payload'] = execute(msg, data_grouped_by_date)
@@ -294,4 +299,34 @@ def sos_t(node, msg):
     print("######### SHOW MSG ##########")
     print(msg.keys())
 
+    return msg
+
+
+@node_red(category="TSMInput", title="GET DWD Data")
+def dwd(node, msg):
+
+
+    clisos_config = msg["clisos_config_string"]
+    startdate=''
+    for line in clisos_config.splitlines():
+        if 'starttime' in line:
+            startdate = line.split('=')[1].strip()
+
+    from dwdweather import DwdWeather
+    from datetime import datetime
+
+    DwdWeather.import_stations()
+    
+    # create client
+    dw = DwdWeather()
+
+
+    # The hour you're interested in.
+    # The example is 2014-03-22 12:00 (UTC).
+    query_hour = datetime.strptime(startdate,'%Y-%m-%dT%H:%M:%S')
+
+    result = dw.query(station_id=2110, timestamp=query_hour)
+    print(result)
+
+    msg['dwd_data']=result
     return msg

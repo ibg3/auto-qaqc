@@ -3,3 +3,8 @@ owslib
 ciso8601
 pandas
 scipy
+bump2version==0.5.10
+twine==1.12.1
+keyring==17.0.0
+requests-cache
+htmllistparse
