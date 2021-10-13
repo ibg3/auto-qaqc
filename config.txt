@@ -1,0 +1,12 @@
+[getObservation]
+offering = Public
+resultmodel = om:Observation
+stations = RU_C_004
+parameter = NeutronCount_Epithermal_Cum1hr,AirPressure_1m
+starttime = 2021-05-30T13:44:52
+endtime = 2021-09-01T13:44:52
+
+[connection]
+host = ibg3wradar.ibg.kfa-juelich.de
+port = 8080
+url = /eifelrur_public/sos

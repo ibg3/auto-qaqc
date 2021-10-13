@@ -2,16 +2,16 @@ from clisos_mod.clisos import CliSos
 from org.fzj.ibg3.algo.cosmicray_station_processing import execute
 from org.fzj.ibg3.pnr.ParseData import parse_data
 
-msg=[]
+msg={}
 def clisos():
     # config_string = "".join(map(chr, list(map(int, msg["payload"]["data"]))))
     config_string = '''[getObservation]
 offering = Public
 resultmodel = om:Observation
 stations = RU_C_004
-parameter = NeutronCount_Epithermal_Cum1hr,AirHumidity_Relative,AirPressure_2m,AirTemperature
-starttime = 2021-09-30T13:44:52
-endtime = 2016-01-01T13:44:52
+parameter = NeutronCount_Epithermal_Cum1hr,AirPressure_1m
+starttime = 2021-05-30T13:44:52
+endtime = 2021-09-01T13:44:52
 
 [connection]
 host = ibg3wradar.ibg.kfa-juelich.de
@@ -19,7 +19,7 @@ port = 8080
 url = /eifelrur_public/sos'''
 
     print(config_string)
-    msg["clisos_config_string"] = config_string
+    msg['clisos_config_string'] = config_string
     resultModel = "om:Observation"
     srs = None
     spatialFilterSrs = None
@@ -70,11 +70,22 @@ url = /eifelrur_public/sos'''
     msg['payload'] = out
     msg['header'] = header
 
-    f = open("demofile2.txt", "a")
+    f = open("orig_data.txt", "a")
+    f.write(s)
+    f.close()
+
+    f = open("payload.txt", "a")
     f.write(out)
+    f.close()
+
+    #f = open("header.txt", "a")
+    #f.write(header)
+    #f.close()
+
+    f = open("config.txt", "a")
+    f.write(config_string)
     f.close()
 
     return msg
 
-
-execute(msg)
+clisos()
