@@ -352,11 +352,30 @@ def execute(msg):
 
     # get correction for pressure, humidity and incoming counts
     station_Rc = ''
-    for splitted_line in msg['description'].splitlines():
-        if 'cutoff rigidity' in splitted_line:
-            station_Rc = float(splitted_line.split(': ')[1].split(' ')[0])
-            break
+    splitted_line  = msg['description'].split('----')
 
+    if 'cutoff rigidity' in splitted_line[0]:
+        station_Rc = float(splitted_line[0].split(': ')[1])
+
+    l1 = splitted_line[1]
+    index = l1.rfind(']')
+    header = l1[0:index+1]
+    data = l1[index:]
+
+
+
+
+    Params = pd.read_csv(calibration_data, comment='#', low_memory=False, parse_dates=[0],
+                     index_col=0, na_values='noData')
+    print(Params)
+    # give it proper timestamps
+    Params['Calibration Time'] = Params.index
+    Params['Calibration Time'] = pd.to_datetime(Params['Calibration Time'], format='%d.%m.%Y %H:%M').dt.round(
+        freq='H')  # convert to datetime
+
+    BD = np.nanmean(Params['BD [g/cm3]'])
+    LW = np.nanmean(Params['LW [g/g]'])
+    SM_ref = np.array(Params['SM [m3/m3]'])
 
 
     beta = 0.0076
@@ -405,18 +424,21 @@ def execute(msg):
     Calibrations.append([])
     C_all.append([])
 
-
-
     ## get footprint metrics (R86 and D86) <- this takes really long because of the iteration. But I don't know how to solve it without...
     #################################################################################################################
     #################################################################################################################
-    #F_metrics = []
-    #for k in range(len(CR)):
+    # F_metrics = []
+    # for k in range(len(CR)):
     #    F_metrics.append(F_shape(CR.iloc[k]['SM_init'], CR.iloc[k]['AirPressure_gapfilled'], CR.iloc[k]['AirHumidity_gapfilled'], BD, LW))
-    #CR[['R86', 'D86']] = F_metrics
+    # CR[['R86', 'D86']] = F_metrics
 
     if 'SM' in CR.columns:
-
+        CR['Footprint_Depth_m'] = corny.D86(CR['SM'] + LW, bd=BD, r=1) / 100
+        CR['Footprint_Radius_m'] = CR.apply(lambda row: corny.get_footprint(
+            row['SM'] + LW, row['AirHumidity_gapfilled'], row['AirPressure_gapfilled']), axis=1)
+        ListofFiles2.append(files2[i])
+        ListofDepth.append(CR['Footprint_Depth_m'].mean())
+        ListofRadii.append(CR['Footprint_Radius_m'].mean())
 
         # Export
         CR_Export = CR[[

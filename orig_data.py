@@ -1622,7 +1622,7 @@ msg['orig_data'] = '''#Time,feature,AirPressure_1m in [mbar],AirPressure_1mQuali
 
 
 #Calibration Data
-msg['description']='''CRNS Heinsberg-Schleiden Agriculrure cutoff rigidity: 3.08 Calibration Time,SM [m3/m3],BD [g/cm3],SOC [%],LW [g/g] 2012-10-19 11:00,0.328,1.215,0.026,0.010 Full raw calibration data can be accessed using the search for RU_CD_004
+msg['description']='''CRNS Heinsberg-Schleiden Agriculrure cutoff rigidity: 3.08----CalibrationTime,SM [m3/m3],BD [g/cm3],SOC [%],LW [g/g] 2012-10-19 11:00,0.328,1.215,0.026,0.010----Full raw calibration data can be accessed using the search for RU_CD_004
 '''
 
 #NeutronCount Junfraujoch (NM)
