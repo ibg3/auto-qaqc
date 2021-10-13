@@ -133,3 +133,5 @@ fabric.properties
 .node-red/
 .DS_Store
 __pycache__/
+node-red/
+node_modules/
