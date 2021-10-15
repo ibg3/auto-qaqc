@@ -1,6 +1,12 @@
 from io import StringIO
 
+import download_dwd
 
+dwd_map = {
+    'RU_C_004': '02110',
+    'RU_C_005': '02497',
+    'RU_C_006': '15000',
+}
 
 
 
@@ -19,10 +25,7 @@ def execute(msg):
             tmp += line+'\n'
     data = StringIO(tmp)
 
-    for str in tmp.splitlines():
-        str_2 = str.split(',')[1]
-        if str_2 != 'SE_C_001':
-            print(str_2)
+
 
     # Get rid of FutureWarnings in Python 3.9.7*
     import warnings
@@ -102,37 +105,28 @@ def execute(msg):
 
     # get all files in folder
     ################################################################################################################
-
-    ERA5_Station = 'data/ERA5_stationdata/'
     ################################################################################################################
     ################################################################################################################
 
-    Calibration = 'data/edited_calibration_data/'
-    Cal_files = next(os.walk(Calibration))[2]
+
 
     # make lists compareable
-    Cal_files2 = [re.sub("\d","",s.replace('.csv',''))[:-1]+s[-7:] for s in Cal_files]
 
-    # read station information for proper naming of stations and colorcodes
-    info = pd.read_csv('data/Station_information_hex.csv')
+
     ################################################################################################################
     ################################################################################################################
 
     # intiate lists to hold the processed information
-    Calibrations = []; CR_all = []; C_all = [];
-    hum_pops = []; press_pops = [];
+    Calibrations = []
+    CR_all = []
+    C_all = []
 
-    Climate = pd.DataFrame(columns=['Site', 'Yearly average temperature 2010-2019 [°C]', 'Yearly precipitaion mean 2010-2019 [mm]'])#.set_index('Site')
 
-    # Preload footprint radius matrix
-    footprint_data = np.loadtxt('corny/footprint_radius.csv')
 
     # Keep track of calibration RMSEs
     ListofRMSEs = []
     ListofFiles = []
-    ListofFiles2 = []
-    ListofDepth = []
-    ListofRadii = []
+
 
 
 
@@ -165,10 +159,8 @@ def execute(msg):
 
     CR['NeutronCount_Epithermal'] = CR[CR.columns[cols][0]]
 
+    CR_DWD = None
     # identify the pressure, humidity and temperature columns to use
-
-
-
 
     # pressure
     if 'AirPressure' in CR.columns:
@@ -179,6 +171,17 @@ def execute(msg):
         min_p = mean_p-mean_p*.05
         max_p = mean_p+mean_p*.05
         CR.loc[(CR['pressure_use'] < min_p) | (CR['pressure_use'] > max_p), 'pressure_use'] = np.nan
+
+    elif 'RU_C_004' in CR_orig['feature'][0]  or 'RU_C_005' in CR_orig['feature'][0] or 'RU_C_006' in CR_orig['feature'][0]:
+        if CR_DWD is None:
+            data = download_dwd.download(dwd_map[CR_orig['feature'][0]], 'moisture', 'hourly', CR_orig.index[0])
+            dataStream = StringIO(data)
+            CR_DWD = pd.read_csv(dataStream, low_memory=False, index_col=False, na_values='-999.0', sep=';')
+            CR_DWD['MESS_DATUM'] = pd.to_datetime(CR_DWD['MESS_DATUM'], format='%Y%m%d%H', utc=True)
+            CR_DWD['MESS_DATUM'] = CR_DWD['MESS_DATUM'].dt.tz_localize(None)
+            CR_DWD = CR_DWD.set_index('MESS_DATUM')
+        CR['pressure_use'] = CR_DWD['P_STD']
+
     else:
         cols_p = ['Pressure' in s and 'PreFlag' not in s and 'NC' not in s for s in CR.columns]
         #print(CR[CR.columns[cols_p]].columns)
@@ -197,6 +200,21 @@ def execute(msg):
     if 'AirHumidity_Relative' in CR.columns:
         CR['humidity_use'] = CR['AirHumidity_Relative']
         CR.loc[(CR['humidity_use'] > 100) | (CR['humidity_use'] < 1), 'humidity_use'] = np.nan
+    elif 'RU_C_004' in CR_orig['feature'][0]  or 'RU_C_005' in CR_orig['feature'][0] or 'RU_C_006' in CR_orig['feature'][0]:
+        if CR_DWD is None:
+            data = download_dwd.download(dwd_map[CR_orig['feature'][0]],'moisture','hourly', CR_orig.index[0])
+            dataStream = StringIO(data)
+            CR_DWD = pd.read_csv(dataStream, low_memory=False, index_col=False, na_values='-999.0',sep=';')
+            CR_DWD['MESS_DATUM'] = pd.to_datetime(CR_DWD['MESS_DATUM'], format='%Y%m%d%H', utc=True)
+            CR_DWD['MESS_DATUM'] = CR_DWD['MESS_DATUM'].dt.tz_localize(None)
+            CR_DWD = CR_DWD.set_index('MESS_DATUM')
+
+
+        result = pd.merge(CR_orig, CR_DWD, left_index=True, right_index=True, how="outer")
+
+
+        CR['humidity_use'] = CR_DWD['RF_STD'] #result['RF_STD']
+
     else:
         cols_h = ['Humidity' in s and 'PreFlag' not in s and 'NC' not in s for s in CR.columns]
         #print(CR[CR.columns[cols_h]].columns)
@@ -215,6 +233,19 @@ def execute(msg):
     if 'AirTemperature' in CR.columns:
         CR['temperature_use'] = CR['AirTemperature']
         CR.loc[(CR['temperature_use'] > 100) | (CR['temperature_use'] < - 50), 'temperature_use'] = np.nan
+
+    elif 'RU_C_004' in CR_orig['feature'][0]  or 'RU_C_005' in CR_orig['feature'][0] or 'RU_C_006' in CR_orig['feature'][0]:
+        if CR_DWD is None:
+            data = download_dwd.download(dwd_map[CR_orig['feature'][0]], 'moisture', 'hourly', CR_orig.index[0])
+            dataStream = StringIO(data)
+            CR_DWD = pd.read_csv(dataStream, low_memory=False, index_col=False, na_values='-999.0', sep=';')
+            CR_DWD['MESS_DATUM'] = pd.to_datetime(CR_DWD['MESS_DATUM'], format='%Y%m%d%H', utc=True)
+            CR_DWD['MESS_DATUM'] = CR_DWD['MESS_DATUM'].dt.tz_localize(None)
+            CR_DWD = CR_DWD.set_index('MESS_DATUM')
+
+        CR['temperature_use'] = CR_DWD['TT_STD']
+
+
     else:
         cols_t = ['Temperature' in s and 'PreFlag' not in s and 'NC' not in s for s in CR.columns]
         #print(CR[CR.columns[cols_t]].columns)
@@ -321,10 +352,30 @@ def execute(msg):
 
     # get correction for pressure, humidity and incoming counts
     station_Rc = ''
-    for splitted_line in msg['description'].splitlines():
-        if 'cutoff rigidity' in splitted_line:
-            station_Rc = float(splitted_line.split(': ')[1])
+    splitted_line  = msg['description'].split('----')
 
+    if 'cutoff rigidity' in splitted_line[0]:
+        station_Rc = float(splitted_line[0].split(': ')[1])
+
+    l1 = splitted_line[1]
+    index = l1.rfind(']')
+    header = l1[0:index+1]
+    data = l1[index:]
+
+
+
+
+    Params = pd.read_csv(calibration_data, comment='#', low_memory=False, parse_dates=[0],
+                     index_col=0, na_values='noData')
+    print(Params)
+    # give it proper timestamps
+    Params['Calibration Time'] = Params.index
+    Params['Calibration Time'] = pd.to_datetime(Params['Calibration Time'], format='%d.%m.%Y %H:%M').dt.round(
+        freq='H')  # convert to datetime
+
+    BD = np.nanmean(Params['BD [g/cm3]'])
+    LW = np.nanmean(Params['LW [g/g]'])
+    SM_ref = np.array(Params['SM [m3/m3]'])
 
 
     beta = 0.0076
@@ -373,18 +424,21 @@ def execute(msg):
     Calibrations.append([])
     C_all.append([])
 
-
-
     ## get footprint metrics (R86 and D86) <- this takes really long because of the iteration. But I don't know how to solve it without...
     #################################################################################################################
     #################################################################################################################
-    #F_metrics = []
-    #for k in range(len(CR)):
+    # F_metrics = []
+    # for k in range(len(CR)):
     #    F_metrics.append(F_shape(CR.iloc[k]['SM_init'], CR.iloc[k]['AirPressure_gapfilled'], CR.iloc[k]['AirHumidity_gapfilled'], BD, LW))
-    #CR[['R86', 'D86']] = F_metrics
+    # CR[['R86', 'D86']] = F_metrics
 
     if 'SM' in CR.columns:
-
+        CR['Footprint_Depth_m'] = corny.D86(CR['SM'] + LW, bd=BD, r=1) / 100
+        CR['Footprint_Radius_m'] = CR.apply(lambda row: corny.get_footprint(
+            row['SM'] + LW, row['AirHumidity_gapfilled'], row['AirPressure_gapfilled']), axis=1)
+        ListofFiles2.append(files2[i])
+        ListofDepth.append(CR['Footprint_Depth_m'].mean())
+        ListofRadii.append(CR['Footprint_Radius_m'].mean())
 
         # Export
         CR_Export = CR[[
@@ -413,7 +467,7 @@ def execute(msg):
 
 
     Lists = pd.DataFrame()
-    Lists['File'] = ListofFiles
+
     Lists['RMSE'] = ListofRMSEs
 
 
@@ -423,4 +477,4 @@ def execute(msg):
 
     print('Calibration RMSE: %.4f' % Lists[Lists.RMSE>0.0001]['RMSE'].mean())
 
-
+    print(CR_all)
