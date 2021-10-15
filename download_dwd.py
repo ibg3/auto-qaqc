@@ -23,16 +23,16 @@ def getTimeUrl(timestamp):
     # cache miss
     age = (datetime.utcnow() - timestamp).total_seconds() / 86400
     if age < 1:
-        return 'current'
+        return ['current']
         return (True, False, False)
     elif age < 360:
-        return 'recent'
+        return ['recent']
         return (False,True,False)
     elif age >= 360 and age <= 370:
-        return 'historical'
+        return ['historical']
         return (False,True,True)
     else:
-        return 'historical'
+        return ['historical','recent']
         return (False, False, True)
 
 
@@ -49,27 +49,35 @@ def download_extract_zip(url):
 
 
 def download(station, field, resolution, start):
+    data = ""
+    header = ""
+    for time in getTimeUrl(start):
+        url = "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/%s/%s/%s/" % (resolution, field, time )
+        r = requests.get(url)
+        print('Request URL: ' + url)
 
+        file_url = ''
+        for line in r.text.splitlines():
+            if ('_' + station + '_') in line:
+                file_url = line.split('href=')[1].split('"')[1]
+                break
 
+        url = url + file_url
+        first = True
+        file=None
 
-    url = "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/%s/%s/%s/" % (resolution, field, getTimeUrl(start) )
-    r = requests.get(url)
-    print('Request URL: ' + url)
+        for (info, f) in download_extract_zip(url):
+            if 'Metadaten' not in info:
+                for line in f:
+                    if first:
+                        first = False
+                        if header == "":
+                            header = line
+                        else:
+                            print ('Headers of DWD data are equal: %s' % (header == line))
+                            continue
 
-    file_url = ''
-    for line in r.text.splitlines():
-        if ('_' + station + '_') in line:
-            file_url = line.split('href=')[1].split('"')[1]
-            break
-
-    url = url + "/" + file_url
-
-    file=None
-    data=""
-    for (info, f) in download_extract_zip(url):
-        if 'Metadaten' not in info:
-            for line in f:
-                data += (str(line).replace('b\'','')[0:-5].strip()) + '\n'
+                    data += (str(line).replace('b\'','')[0:-5].strip()) + '\n'
 
 
 

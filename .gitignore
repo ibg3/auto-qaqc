@@ -135,3 +135,5 @@ fabric.properties
 __pycache__/
 node-red/
 node_modules/
+*.csv
+package-lock.json
